@@ -30,7 +30,6 @@ namespace WinUINotes.Views
         public NotePage()
         {
             this.InitializeComponent();
-            Loaded += NotePage_Loaded;
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -47,7 +46,6 @@ namespace WinUINotes.Views
             {
                 await noteModel.DeleteAsync();
             }
-        }
         }
     }
 }
