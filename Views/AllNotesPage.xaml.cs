@@ -30,4 +30,14 @@ public sealed partial class AllNotesPage : Page
     {
         InitializeComponent();
     }
+
+    private void AppBarButton_Click(object sender, RoutedEventArgs e)
+    {
+
+    }
+
+    private void NewNoteButton_Click(object sender, RoutedEventArgs e)
+    {
+        Frame.Navigate(typeof(NotePage));
+    }
 }

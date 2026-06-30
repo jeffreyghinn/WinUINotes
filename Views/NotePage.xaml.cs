@@ -32,6 +32,13 @@ namespace WinUINotes.Views
             this.InitializeComponent();
         }
 
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            noteModel = new Note();
+        }
+
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             if (noteModel is not null)
