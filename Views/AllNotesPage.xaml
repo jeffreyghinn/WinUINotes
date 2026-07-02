@@ -54,7 +54,7 @@
             ItemTemplate="{StaticResource NoteItemTemplate}"
             SelectionMode="None"
             IsItemInvokedEnabled="True"
-            IsItemInvokedEnabled="True">
+            ItemInvoked="ItemsView_ItemInvoked">
             <ItemsView.Layout>
                 <UniformGridLayout MinItemWidth="200"
                            MinColumnSpacing="12"

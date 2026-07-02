@@ -36,7 +36,14 @@ namespace WinUINotes.Views
         {
             base.OnNavigatedTo(e);
 
-            noteModel = new Note();
+            if (e.Parameter is Note note)
+            {
+                noteModel = note;
+            }
+            else
+            {
+                noteModel = new Note();
+            }
         }
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
@@ -52,6 +59,11 @@ namespace WinUINotes.Views
             if (noteModel is not null)
             {
                 await noteModel.DeleteAsync();
+            }
+
+            if (Frame.CanGoBack == true)
+            {
+                Frame.GoBack();
             }
         }
     }
