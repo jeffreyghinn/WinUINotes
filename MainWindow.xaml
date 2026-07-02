@@ -27,7 +27,7 @@
               IsBackButtonEnabled="{x:Bind rootFrame.CanGoBack, Mode=OneWay}"
               BackRequested="AppTitleBar_BackRequested">
             <TitleBar.IconSource>
-                <FontIconSource Glyph="&#xF4AA;"/>
+                <ImageIconSource ImageSource="/Assets/TitleBarIcon.png"/>
             </TitleBar.IconSource>
         </TitleBar>
 
