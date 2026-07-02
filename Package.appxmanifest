@@ -9,15 +9,15 @@
   IgnorableNamespaces="uap rescap systemai">
 
   <Identity
-    Name="c2cf2996-d331-449c-bbe0-b52ddec72a2a"
-    Publisher="CN=JeffreyGhinn"
-    Version="1.0.0.0" />
+    Name="JeffreyGhinn.WinUINotes"
+    Publisher="CN=E4EB9E1D-B164-4A5F-AE78-84B68C28073D"
+    Version="1.0.1.0" />
 
-  <mp:PhoneIdentity PhoneProductId="c2cf2996-d331-449c-bbe0-b52ddec72a2a" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="f39dd7cc-8081-4a2c-a024-342c5e038ee1" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>WinUINotes</DisplayName>
-    <PublisherDisplayName>JeffreyGhinn</PublisherDisplayName>
+    <DisplayName>WinUI Notes</DisplayName>
+    <PublisherDisplayName>Jeffrey Ghinn</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -35,7 +35,7 @@
       Executable="$targetnametoken$.exe"
       EntryPoint="$targetentrypoint$">
       <uap:VisualElements
-        DisplayName="WinUINotes"
+        DisplayName="WinUI Notes"
         Description="WinUINotes"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
