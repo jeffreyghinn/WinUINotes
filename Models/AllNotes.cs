@@ -13,10 +13,10 @@ namespace WinUINotes.Models
 
         public AllNotes()
         {
-            LoadNotes();
+            _ = LoadNotes();
         }
 
-        public async void LoadNotes()
+        public async Task LoadNotes()
         {
             Notes.Clear();
             // Get the folder where the notes are stored.

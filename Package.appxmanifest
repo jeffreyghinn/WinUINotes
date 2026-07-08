@@ -11,7 +11,7 @@
   <Identity
     Name="JeffreyGhinn.WinUINotes"
     Publisher="CN=E4EB9E1D-B164-4A5F-AE78-84B68C28073D"
-    Version="1.0.1.0" />
+    Version="1.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="f39dd7cc-8081-4a2c-a024-342c5e038ee1" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

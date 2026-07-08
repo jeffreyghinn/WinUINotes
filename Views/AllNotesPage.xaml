@@ -49,8 +49,11 @@
             </CommandBar.Content>
         </CommandBar>
 
-        <ItemsView ItemsSource="{x:Bind notesModel.Notes}" 
-           Grid.Row="1" Margin="24" 
+        <ItemsView 
+            x:Name="NotesView"
+            ItemsSource="{Binding Notes}"
+            Grid.Row="1" 
+            Margin="24" 
             ItemTemplate="{StaticResource NoteItemTemplate}"
             SelectionMode="None"
             IsItemInvokedEnabled="True"

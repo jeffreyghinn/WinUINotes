@@ -34,7 +34,7 @@ namespace WinUINotes
         /// </summary>
         public App()
         {
-            InitializeComponent();
+            this.InitializeComponent();
         }
 
         /// <summary>
