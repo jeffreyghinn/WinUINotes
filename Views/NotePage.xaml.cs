@@ -52,6 +52,11 @@ namespace WinUINotes.Views
             {
                 await noteModel.SaveAsync();
             }
+
+            if (Frame.CanGoBack == true)
+            {
+                Frame.GoBack();
+            }
         }
 
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
