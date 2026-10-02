@@ -41,4 +41,21 @@ public sealed partial class AllNotesPage : Page
     {
         Frame.Navigate(typeof(NotePage), args.InvokedItem);
     }
+
+    private async void DeleteNoteMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuFlyoutItem menuItem || menuItem.CommandParameter is not string filename)
+        {
+            return;
+        }
+
+        Note? note = notesModel.Notes.FirstOrDefault(item => item.Filename == filename);
+        if (note is null)
+        {
+            return;
+        }
+
+        await note.DeleteAsync();
+        notesModel.Notes.Remove(note);
+    }
 }

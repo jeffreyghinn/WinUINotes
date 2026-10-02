@@ -17,6 +17,13 @@
                     BorderThickness="1"
                       BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                       CornerRadius="{StaticResource OverlayCornerRadius}">
+                    <Grid.ContextFlyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem Text="Delete"
+                                            CommandParameter="{x:Bind Filename}"
+                                            Click="DeleteNoteMenuItem_Click"/>
+                        </MenuFlyout>
+                    </Grid.ContextFlyout>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="120"/>
                         <RowDefinition Height="Auto"/>
