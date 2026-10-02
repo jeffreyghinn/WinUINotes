@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Navigation;
 using System;
 using System.Collections.Generic;
@@ -31,6 +32,26 @@ namespace WinUINotes
             ExtendsContentIntoTitleBar = true;
             // Replace system title bar with the WinUI TitleBar.
             SetTitleBar(AppTitleBar);
+            // Update the title bar icon when the Windows theme changes.
+            UpdateTitleBarIcon();
+            AppTitleBar.ActualThemeChanged += AppTitleBar_ActualThemeChanged;
+        }
+
+        private void AppTitleBar_ActualThemeChanged(FrameworkElement sender, object args)
+        {
+            UpdateTitleBarIcon();
+        }
+
+        private void UpdateTitleBarIcon()
+        {
+            var iconPath = AppTitleBar.ActualTheme == ElementTheme.Dark
+                ? "ms-appx:///Assets/TitleBarIcon.Dark.png"
+                : "ms-appx:///Assets/TitleBarIcon.png";
+
+            AppTitleBar.IconSource = new ImageIconSource
+            {
+                ImageSource = new BitmapImage(new Uri(iconPath))
+            };
         }
 
         private void AppTitleBar_BackRequested(TitleBar sender, object args)
