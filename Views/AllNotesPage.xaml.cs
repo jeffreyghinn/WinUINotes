@@ -55,6 +55,20 @@ public sealed partial class AllNotesPage : Page
             return;
         }
 
+        ContentDialog confirmationDialog = new()
+        {
+            Title = "Delete this note?",
+            PrimaryButtonText = "Delete",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = XamlRoot
+        };
+
+        if (await confirmationDialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
         await note.DeleteAsync();
         notesModel.Notes.Remove(note);
     }

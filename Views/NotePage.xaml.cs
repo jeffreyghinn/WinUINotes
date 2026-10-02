@@ -61,10 +61,26 @@ namespace WinUINotes.Views
 
         private async void DeleteButton_Click(object sender, RoutedEventArgs e)
         {
-            if (noteModel is not null)
+            if (noteModel is null)
             {
-                await noteModel.DeleteAsync();
+                return;
             }
+
+            ContentDialog confirmationDialog = new()
+            {
+                Title = "Delete this note?",
+                PrimaryButtonText = "Delete",
+                CloseButtonText = "Cancel",
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = XamlRoot
+            };
+
+            if (await confirmationDialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            await noteModel.DeleteAsync();
 
             if (Frame.CanGoBack == true)
             {
