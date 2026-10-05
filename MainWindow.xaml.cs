@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Graphics;
 using Windows.Foundation;
@@ -18,6 +19,7 @@ using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using Windows.Storage;
+using Windows.UI.Input;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -30,6 +32,15 @@ namespace WinUINotes
     public sealed partial class MainWindow : Window
     {
         private const string WindowStateKey = "MainWindowState";
+        private const uint WmKeyDown = 0x0100;
+        private const uint WmSysKeyDown = 0x0104;
+        private const uint WmAppCommand = 0x0319;
+        private const ulong AppCommandBrowserBack = 1;
+        private const ulong VkBrowserBack = 0xA6;
+        private static readonly UIntPtr WindowSubclassId = new(1);
+        private readonly SubclassProc _windowSubclassProc;
+        private readonly EnumChildWindowsProc _enumChildWindowsProc;
+        private readonly List<IntPtr> _subclassedChildWindows = new();
         private AppWindow? _appWindow;
         private RectInt32 _lastNormalBounds;
         private bool _hasNormalBounds;
@@ -37,7 +48,13 @@ namespace WinUINotes
 
         public MainWindow()
         {
+            _windowSubclassProc = WindowSubclassCallback;
+            _enumChildWindowsProc = SubclassChildWindow;
             InitializeComponent();
+            RootGrid.AddHandler(
+                UIElement.PointerPressedEvent,
+                new PointerEventHandler(RootGrid_PointerPressed),
+                true);
 
             InitializeWindowState();
 
@@ -53,6 +70,8 @@ namespace WinUINotes
         private void InitializeWindowState()
         {
             var hwnd = WindowNative.GetWindowHandle(this);
+            SetWindowSubclass(hwnd, _windowSubclassProc, WindowSubclassId, UIntPtr.Zero);
+            EnumChildWindows(hwnd, _enumChildWindowsProc, UIntPtr.Zero);
             var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             _appWindow = AppWindow.GetFromWindowId(windowId);
             _appWindow.Changed += AppWindow_Changed;
@@ -113,6 +132,11 @@ namespace WinUINotes
         {
             RememberNormalBoundsIfApplicable();
             SaveWindowState();
+            foreach (var childHwnd in _subclassedChildWindows)
+            {
+                RemoveWindowSubclass(childHwnd, _windowSubclassProc, WindowSubclassId);
+            }
+            RemoveWindowSubclass(WindowNative.GetWindowHandle(this), _windowSubclassProc, WindowSubclassId);
         }
 
         private void RememberNormalBoundsIfApplicable()
@@ -212,5 +236,93 @@ namespace WinUINotes
                 rootFrame.GoBack();
             }
         }
+
+        private IntPtr WindowSubclassCallback(
+            IntPtr hwnd,
+            uint message,
+            UIntPtr wParam,
+            IntPtr lParam,
+            UIntPtr subclassId,
+            UIntPtr referenceData)
+        {
+            var appCommand = (unchecked((ulong)lParam.ToInt64()) >> 16) & 0xFFFF;
+            var isBrowserBack = message == WmAppCommand && appCommand == AppCommandBrowserBack;
+            var isBrowserBackKey = (message == WmKeyDown || message == WmSysKeyDown) &&
+                                   wParam.ToUInt64() == VkBrowserBack;
+            if ((isBrowserBack || isBrowserBackKey) && rootFrame.CanGoBack)
+            {
+                QueueGoBack();
+                return new IntPtr(1);
+            }
+
+            return DefSubclassProc(hwnd, message, wParam, lParam);
+        }
+
+        private void RootGrid_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            var properties = e.GetCurrentPoint((UIElement)sender).Properties;
+
+            if ((properties.IsXButton1Pressed || properties.PointerUpdateKind.ToString() == "XButton1Pressed") &&
+                rootFrame.CanGoBack)
+            {
+                e.Handled = true;
+                QueueGoBack();
+            }
+        }
+
+        private void QueueGoBack()
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (rootFrame.CanGoBack)
+                {
+                    rootFrame.GoBack();
+                }
+            });
+        }
+
+        private bool SubclassChildWindow(IntPtr childHwnd, IntPtr referenceData)
+        {
+            if (SetWindowSubclass(childHwnd, _windowSubclassProc, WindowSubclassId, UIntPtr.Zero))
+            {
+                _subclassedChildWindows.Add(childHwnd);
+            }
+
+            return true;
+        }
+
+        private delegate IntPtr SubclassProc(
+            IntPtr hwnd,
+            uint message,
+            UIntPtr wParam,
+            IntPtr lParam,
+            UIntPtr subclassId,
+            UIntPtr referenceData);
+
+        private delegate bool EnumChildWindowsProc(IntPtr hwnd, IntPtr referenceData);
+
+        [DllImport("comctl32.dll", ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetWindowSubclass(
+            IntPtr hwnd,
+            SubclassProc callback,
+            UIntPtr subclassId,
+            UIntPtr referenceData);
+
+        [DllImport("comctl32.dll", ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool RemoveWindowSubclass(IntPtr hwnd, SubclassProc callback, UIntPtr subclassId);
+
+        [DllImport("user32.dll", ExactSpelling = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EnumChildWindows(IntPtr parentHwnd, EnumChildWindowsProc callback, UIntPtr referenceData);
+
+        [DllImport("comctl32.dll", ExactSpelling = true)]
+        private static extern IntPtr DefSubclassProc(
+            IntPtr hwnd,
+            uint message,
+            UIntPtr wParam,
+            IntPtr lParam);
+
     }
 }

@@ -52,6 +52,14 @@ namespace WinUINotes.Views
             {
                 await noteModel.SaveAsync();
             }
+        }
+
+        private async void SaveAndCloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (noteModel is not null)
+            {
+                await noteModel.SaveAsync();
+            }
 
             if (Frame.CanGoBack == true)
             {

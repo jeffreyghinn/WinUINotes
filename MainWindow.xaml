@@ -14,7 +14,7 @@
         <MicaBackdrop Kind="Base"/>
     </Window.SystemBackdrop>
 
-    <Grid>
+    <Grid x:Name="RootGrid" Background="Transparent">
         <Grid.RowDefinitions>
             <!-- Title Bar -->
             <RowDefinition Height="Auto" />
