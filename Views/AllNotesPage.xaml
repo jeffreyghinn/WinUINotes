@@ -28,7 +28,7 @@
                         <RowDefinition Height="120"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Text="{x:Bind Text}" Margin="12,8"
+                    <TextBlock Text="{x:Bind Preview, Mode=OneWay}" Margin="12,8"
                            TextWrapping="Wrap"
                            TextTrimming="WordEllipsis"/>
                     <Border Grid.Row="1" Padding="8,6,0,6"

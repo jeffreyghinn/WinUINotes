@@ -32,7 +32,7 @@ namespace WinUINotes.Views
             this.InitializeComponent();
         }
 
-        protected override void OnNavigatedTo(NavigationEventArgs e)
+        protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
 
@@ -43,6 +43,31 @@ namespace WinUINotes.Views
             else
             {
                 noteModel = new Note();
+            }
+
+            if (noteModel is { IsContentLoaded: false })
+            {
+                NoteEditor.IsEnabled = false;
+                try
+                {
+                    await noteModel.LoadContentAsync();
+                }
+                catch (Exception)
+                {
+                    ContentDialog errorDialog = new()
+                    {
+                        Title = "Couldn't open note",
+                        Content = "WinUINotes couldn't read this note. You can go back and try again.",
+                        CloseButtonText = "OK",
+                        XamlRoot = XamlRoot
+                    };
+
+                    await errorDialog.ShowAsync();
+                }
+                finally
+                {
+                    NoteEditor.IsEnabled = true;
+                }
             }
         }
 

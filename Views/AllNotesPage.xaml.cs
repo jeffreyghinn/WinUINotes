@@ -25,16 +25,50 @@ namespace WinUINotes.Views;
 public sealed partial class AllNotesPage : Page
 {
     private AllNotes notesModel = new AllNotes();
+    private bool hasLoadedNotes;
 
     public AllNotesPage()
     {
+        NavigationCacheMode = NavigationCacheMode.Enabled;
         DataContext = notesModel;
         InitializeComponent();
     }
 
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
+    {
+        base.OnNavigatedTo(e);
+        foreach (Note draft in notesModel.Notes.Where(note => !note.IsSaved).ToList())
+        {
+            notesModel.Notes.Remove(draft);
+        }
+
+        if (!hasLoadedNotes)
+        {
+            try
+            {
+                await notesModel.LoadNotesAsync();
+                hasLoadedNotes = true;
+            }
+            catch (Exception)
+            {
+                ContentDialog errorDialog = new()
+                {
+                    Title = "Couldn't load notes",
+                    Content = "WinUINotes couldn't read your notes. Return to this page to try again.",
+                    CloseButtonText = "OK",
+                    XamlRoot = XamlRoot
+                };
+
+                await errorDialog.ShowAsync();
+            }
+        }
+    }
+
     private void NewNoteButton_Click(object sender, RoutedEventArgs e)
     {
-        Frame.Navigate(typeof(NotePage));
+        Note note = new();
+        notesModel.Notes.Insert(0, note);
+        Frame.Navigate(typeof(NotePage), note);
     }
 
     private void ItemsView_ItemInvoked(ItemsView sender, ItemsViewItemInvokedEventArgs args)
