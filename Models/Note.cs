@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
+using Windows.Storage.FileProperties;
+using WinUINotes.Services;
 
 namespace WinUINotes.Models
 {
@@ -14,7 +16,10 @@ namespace WinUINotes.Models
         private string filename = string.Empty;
         private string text = string.Empty;
         private string preview = string.Empty;
+        private string title = string.Empty;
+        private bool isProEnabled;
         private DateTime date = DateTime.Now;
+        private DateTime lastEdited = DateTime.Now;
         private readonly SemaphoreSlim fileOperationLock = new(1, 1);
 
         public event PropertyChangedEventHandler? PropertyChanged;
@@ -43,10 +48,49 @@ namespace WinUINotes.Models
             private set => SetProperty(ref preview, value);
         }
 
+        // Empty means use the note's original creation date as its title.
+        public string Title
+        {
+            get => title;
+            set
+            {
+                if (SetProperty(ref title, value))
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayTitle)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListTitle)));
+                }
+            }
+        }
+
+        public string DisplayTitle => string.IsNullOrWhiteSpace(Title) ? Date.ToString() : Title;
+        public string ListTitle => isProEnabled && !string.IsNullOrWhiteSpace(Title) ? Title : Date.ToString();
+
+        internal void SetProEnabled(bool value)
+        {
+            if (isProEnabled != value)
+            {
+                isProEnabled = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListTitle)));
+            }
+        }
+
         public DateTime Date
         {
             get => date;
-            set => SetProperty(ref date, value);
+            set
+            {
+                if (SetProperty(ref date, value))
+                {
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DisplayTitle)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ListTitle)));
+                }
+            }
+        }
+
+        public DateTime LastEdited
+        {
+            get => lastEdited;
+            set => SetProperty(ref lastEdited, value);
         }
 
         public bool IsSaved { get; internal set; }
@@ -72,6 +116,8 @@ namespace WinUINotes.Models
 
                 string textToSave = Text;
                 await FileIO.WriteTextAsync(noteFile, textToSave);
+                BasicProperties properties = await noteFile.GetBasicPropertiesAsync();
+                LastEdited = properties.DateModified.DateTime;
                 IsSaved = true;
                 IsContentLoaded = true;
                 await NoteMetadataCache.UpdateAsync(this);
@@ -109,18 +155,25 @@ namespace WinUINotes.Models
             IsContentLoaded = true;
         }
 
-        public async Task DeleteAsync()
+        public async Task DeleteAsync(bool moveToTrash = false)
         {
             await fileOperationLock.WaitAsync();
             try
             {
-                StorageFile noteFile = (StorageFile)await storageFolder.TryGetItemAsync(Filename);
-                if (noteFile is not null)
+                IStorageItem? noteFile = await storageFolder.TryGetItemAsync(Filename);
+                if (noteFile is StorageFile && moveToTrash)
                 {
-                    await noteFile.DeleteAsync();
+                    await TrashService.MoveToTrashAsync(this);
                 }
+                else
+                {
+                    if (noteFile is StorageFile existingFile)
+                    {
+                        await existingFile.DeleteAsync();
+                    }
 
-                await NoteMetadataCache.RemoveAsync(Filename);
+                    await NoteMetadataCache.RemoveAsync(Filename);
+                }
                 IsDeleted = true;
             }
             finally

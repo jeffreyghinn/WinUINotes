@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="WinUINotes.Views.TrashPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:services="using:WinUINotes.Services">
+    <Grid Padding="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <StackPanel Spacing="4" Margin="0,0,0,16">
+            <TextBlock Text="Trash" Style="{ThemeResource TitleTextBlockStyle}"/>
+            <TextBlock Text="Deleted notes are permanently removed after 30 days." Style="{ThemeResource BodyTextBlockStyle}"/>
+        </StackPanel>
+        <Grid Grid.Row="1">
+            <ListView x:Name="TrashList" IsItemClickEnabled="False">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="services:TrashItem">
+                        <Grid Padding="12" ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="4" VerticalAlignment="Center">
+                                <TextBlock Text="{x:Bind Title}" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                                <TextBlock Text="{x:Bind Preview}" MaxLines="2" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{x:Bind RetentionText}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button Content="Restore" CommandParameter="{x:Bind Filename}" Click="RestoreButton_Click"/>
+                                <Button Content="Delete permanently" CommandParameter="{x:Bind Filename}" Click="DeletePermanentlyButton_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <TextBlock x:Name="EmptyText" Text="Trash is empty" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
+        </Grid>
+    </Grid>
+</Page>

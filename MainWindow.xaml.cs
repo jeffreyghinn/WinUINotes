@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Graphics;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -20,6 +21,9 @@ using Microsoft.UI.Windowing;
 using WinRT.Interop;
 using Windows.Storage;
 using Windows.UI.Input;
+using Windows.Services.Store;
+using WinUINotes.Services;
+using WinUINotes.Views;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -45,12 +49,14 @@ namespace WinUINotes
         private RectInt32 _lastNormalBounds;
         private bool _hasNormalBounds;
         private bool _restoringWindowState;
+        private bool _storeLicenseLoaded;
 
         public MainWindow()
         {
             _windowSubclassProc = WindowSubclassCallback;
             _enumChildWindowsProc = SubclassChildWindow;
             InitializeComponent();
+            ProLicense.Initialize(WindowNative.GetWindowHandle(this));
             RootGrid.AddHandler(
                 UIElement.PointerPressedEvent,
                 new PointerEventHandler(RootGrid_PointerPressed),
@@ -235,6 +241,115 @@ namespace WinUINotes
             {
                 rootFrame.GoBack();
             }
+        }
+
+        private async void AppNavigationView_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (_storeLicenseLoaded)
+            {
+                return;
+            }
+
+            _storeLicenseLoaded = true;
+            bool isPro = await ProLicense.HasProAsync();
+            UpdateProControls(isPro);
+#if DEBUG
+            UpdateDebugProToggle();
+#endif
+        }
+
+        private async void AppNavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+        {
+            if (args.InvokedItemContainer is not NavigationViewItem item)
+            {
+                return;
+            }
+
+            switch (item.Tag as string)
+            {
+                case "Notes":
+                    if (rootFrame.Content is not AllNotesPage)
+                    {
+                        rootFrame.Navigate(typeof(AllNotesPage));
+                    }
+                    break;
+                case "Trash":
+                    if (await ProLicense.HasProAsync() && rootFrame.Content is not TrashPage)
+                    {
+                        rootFrame.Navigate(typeof(TrashPage));
+                    }
+                    break;
+                case "UnlockPro":
+                    await PurchaseProAsync();
+                    break;
+            }
+        }
+
+        private async void DebugProToggle_Toggled(object sender, RoutedEventArgs e)
+        {
+#if DEBUG
+            ProLicense.SetDebugProOverride(DebugProToggle.IsOn ? true : null);
+            UpdateProControls(await ProLicense.HasProAsync());
+#endif
+        }
+
+        private async Task PurchaseProAsync()
+        {
+            UnlockProItem.IsEnabled = false;
+            try
+            {
+                StorePurchaseResult result = await ProLicense.PurchaseAsync();
+                if (result.Status == StorePurchaseStatus.Succeeded && await ProLicense.HasProAsync())
+                {
+                    UpdateProControls(true);
+                }
+                else if (result.Status == StorePurchaseStatus.NotPurchased)
+                {
+                    await ShowStoreMessageAsync("Purchase wasn't completed.");
+                }
+            }
+            catch (Exception exception)
+            {
+                await ShowStoreMessageAsync($"The Store couldn't start this purchase. {exception.Message}");
+            }
+            finally
+            {
+                UnlockProItem.IsEnabled = true;
+            }
+        }
+
+        private void UpdateProControls(bool isPro)
+        {
+            UnlockProItem.Visibility = isPro ? Visibility.Collapsed : Visibility.Visible;
+            TrashItem.Visibility = isPro ? Visibility.Visible : Visibility.Collapsed;
+            if (rootFrame.Content is AllNotesPage notesPage)
+            {
+                notesPage.ApplyProLicense(isPro);
+            }
+            else if (rootFrame.Content is NotePage notePage)
+            {
+                notePage.ApplyProLicense(isPro);
+            }
+        }
+
+#if DEBUG
+        private void UpdateDebugProToggle()
+        {
+            DebugProToggle.IsOn = ProLicense.DebugProOverride == true;
+            DebugProToggle.Visibility = Visibility.Visible;
+        }
+#endif
+
+        private async Task ShowStoreMessageAsync(string message)
+        {
+            ContentDialog dialog = new()
+            {
+                Title = "WinUI Notes Pro",
+                Content = message,
+                CloseButtonText = "OK",
+                XamlRoot = rootFrame.XamlRoot
+            };
+            await dialog.ShowAsync();
         }
 
         private IntPtr WindowSubclassCallback(

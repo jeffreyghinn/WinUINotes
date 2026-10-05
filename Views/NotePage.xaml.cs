@@ -9,6 +9,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using WinUINotes.Models;
+using WinUINotes.Services;
+using Windows.Services.Store;
 
 // To learn more about WinUI, the WinUI project structure,
 // and more about our project templates, see: http://aka.ms/winui-project-info.
@@ -28,6 +30,7 @@ namespace WinUINotes.Views
         private bool isLoading = true;
         private bool isDeleting;
         private bool noteContentReady;
+        private bool isPro;
 
         public NotePage()
         {
@@ -63,6 +66,11 @@ namespace WinUINotes.Views
             }
 
             NoteEditor.Text = noteModel.Text;
+            CreatedDateText.Text = noteModel.Date.ToString();
+            isPro = await ProLicense.HasProAsync();
+            TitleEditor.Visibility = isPro ? Visibility.Visible : Visibility.Collapsed;
+            CreatedDateText.Visibility = isPro ? Visibility.Collapsed : Visibility.Visible;
+            TitleEditor.Text = noteModel.DisplayTitle;
             NoteEditor.IsEnabled = true;
             SaveStatusText.Text = "Changes save automatically";
             isLoading = false;
@@ -73,6 +81,13 @@ namespace WinUINotes.Views
         private void NoteEditor_Loaded(object sender, RoutedEventArgs e)
         {
             QueueEditorFocus();
+        }
+
+        public void ApplyProLicense(bool hasPro)
+        {
+            isPro = hasPro;
+            TitleEditor.Visibility = hasPro ? Visibility.Visible : Visibility.Collapsed;
+            CreatedDateText.Visibility = hasPro ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void QueueEditorFocus()
@@ -118,13 +133,39 @@ namespace WinUINotes.Views
             }
 
             noteModel.Text = NoteEditor.Text;
-            noteModel.HasChanges = true;
+            MarkChanged();
+        }
+
+        private void TitleEditor_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (isLoading || !isPro || noteModel is null)
+            {
+                return;
+            }
+
+            noteModel.Title = TitleEditor.Text;
+            MarkChanged();
+        }
+
+        private async void TitleEditor_LostFocus(object sender, RoutedEventArgs e)
+        {
+            await SaveOnLostFocusAsync();
+        }
+
+        private void MarkChanged()
+        {
+            noteModel!.HasChanges = true;
             editVersion++;
             SaveStatusText.Text = "Unsaved changes";
             ScheduleAutoSave();
         }
 
         private async void NoteEditor_LostFocus(object sender, RoutedEventArgs e)
+        {
+            await SaveOnLostFocusAsync();
+        }
+
+        private async Task SaveOnLostFocusAsync()
         {
             if (!isLoading && noteModel is { HasChanges: true } note)
             {
@@ -211,7 +252,7 @@ namespace WinUINotes.Views
                 await autoSaveTask;
             }
 
-            await noteModel.DeleteAsync();
+            await noteModel.DeleteAsync(moveToTrash: isPro);
 
             if (Frame.CanGoBack == true)
             {

@@ -28,8 +28,46 @@
               BackRequested="AppTitleBar_BackRequested">
         </TitleBar>
 
-        <!-- App content -->
-        <Frame x:Name="rootFrame" Grid.Row="1"
-               SourcePageType="views:AllNotesPage"/>
+        <NavigationView x:Name="AppNavigationView"
+                        Grid.Row="1"
+                        PaneDisplayMode="LeftCompact"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="False"
+                        IsPaneOpen="True"
+                        OpenPaneLength="240"
+                        CompactPaneLength="48"
+                        Loaded="AppNavigationView_Loaded"
+                        ItemInvoked="AppNavigationView_ItemInvoked">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Notes" Tag="Notes" IsSelected="True">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Home"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="TrashItem" Content="Trash" Tag="Trash" Visibility="Collapsed">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Delete"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem x:Name="UnlockProItem" Content="Unlock WinUI Notes Pro"
+                                    Tag="UnlockPro" Visibility="Collapsed">
+                    <NavigationViewItem.Icon>
+                        <SymbolIcon Symbol="Shop"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+            <NavigationView.PaneFooter>
+                <ToggleSwitch x:Name="DebugProToggle"
+                              Header="Simulate Pro"
+                              OnContent="On"
+                              OffContent="Off"
+                              Toggled="DebugProToggle_Toggled"
+                              Visibility="Collapsed"
+                              Margin="12,8,12,12"/>
+            </NavigationView.PaneFooter>
+            <Frame x:Name="rootFrame" SourcePageType="views:AllNotesPage"/>
+        </NavigationView>
     </Grid>
 </Window>

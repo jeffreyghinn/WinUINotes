@@ -12,6 +12,7 @@ namespace WinUINotes.Models
     public sealed class NoteMetadata
     {
         public string Preview { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
         public long DateBinary { get; set; }
         public ulong FileSize { get; set; }
         public long ModifiedUtcTicks { get; set; }
@@ -42,7 +43,11 @@ namespace WinUINotes.Models
             await CacheLock.WaitAsync();
             try
             {
-                entries = new Dictionary<string, NoteMetadata>(snapshot, StringComparer.OrdinalIgnoreCase);
+                await EnsureLoadedAsync(folder);
+                foreach (KeyValuePair<string, NoteMetadata> entry in snapshot)
+                {
+                    entries![entry.Key] = entry.Value;
+                }
                 await WriteAsync(folder);
             }
             finally
@@ -93,6 +98,7 @@ namespace WinUINotes.Models
             return new NoteMetadata
             {
                 Preview = note.Preview,
+                Title = note.Title,
                 DateBinary = note.Date.ToBinary(),
                 FileSize = properties.Size,
                 ModifiedUtcTicks = properties.DateModified.UtcDateTime.Ticks

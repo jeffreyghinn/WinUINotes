@@ -33,7 +33,7 @@
                            TextTrimming="WordEllipsis"/>
                     <Border Grid.Row="1" Padding="8,6,0,6"
                         Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                        <TextBlock Text="{x:Bind Date}"
+                        <TextBlock Text="{x:Bind ListTitle, Mode=OneWay}"
                                Style="{StaticResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                     </Border>
@@ -51,14 +51,42 @@
         <CommandBar DefaultLabelPosition="Right">
             <AppBarButton Icon="Add" Label="New note" Click="NewNoteButton_Click"/>
             <CommandBar.Content>
-                <TextBlock Text="Quick notes" Margin="16,8" 
-                   Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                    <TextBlock Text="Quick notes" Margin="16,8"
+                               VerticalAlignment="Center"
+                               Style="{ThemeResource SubtitleTextBlockStyle}"/>
+                    <StackPanel x:Name="SortControls" Orientation="Horizontal" Spacing="8"
+                                VerticalAlignment="Center" Visibility="Collapsed">
+                        <ComboBox x:Name="SortByComboBox" Width="160" Height="32"
+                                  PlaceholderText="Sort by"
+                                  SelectionChanged="SortByComboBox_SelectionChanged">
+                            <ComboBoxItem Content="Title"/>
+                            <ComboBoxItem Content="Date created"/>
+                            <ComboBoxItem Content="Date last edited"/>
+                        </ComboBox>
+                        <Button x:Name="SortDirectionToggle"
+                                Width="40"
+                                Height="32"
+                                MinHeight="32"
+                                MaxHeight="32"
+                                Padding="0"
+                                VerticalAlignment="Center"
+                                Click="SortDirectionToggle_Click">
+                            <TextBlock x:Name="SortDirectionIcon"
+                                       Text="↓"
+                                       FontFamily="Segoe UI Symbol"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
             </CommandBar.Content>
         </CommandBar>
 
         <ItemsView 
             x:Name="NotesView"
-            ItemsSource="{Binding Notes}"
             Grid.Row="1" 
             Margin="24" 
             ItemTemplate="{StaticResource NoteItemTemplate}"

@@ -17,6 +17,7 @@
               VerticalAlignment="Stretch"
               RowSpacing="8">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*" MinHeight="0"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -24,8 +25,20 @@
                 <ColumnDefinition Width="*" MinWidth="0"/>
             </Grid.ColumnDefinitions>
 
+            <Grid x:Name="TitleArea" Grid.Row="0" Margin="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="CreatedDateText" VerticalAlignment="Center"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <TextBox x:Name="TitleEditor" Grid.Column="0" Visibility="Collapsed"
+                         PlaceholderText="Note title" TextChanged="TitleEditor_TextChanged"
+                         LostFocus="TitleEditor_LostFocus"/>
+            </Grid>
+
             <TextBox x:Name="NoteEditor"
-                     Grid.Row="0"
+                     Grid.Row="1"
                      Grid.Column="0"
                      HorizontalAlignment="Stretch"
                      VerticalAlignment="Stretch"
@@ -34,14 +47,13 @@
                      AcceptsReturn="True"
                      TextWrapping="Wrap"
                      PlaceholderText="Enter your note"
-                     Header="{x:Bind noteModel.Date.ToString()}"
                      ScrollViewer.VerticalScrollBarVisibility="Auto"
                      Loaded="NoteEditor_Loaded"
                      TextChanged="NoteEditor_TextChanged"
                      LostFocus="NoteEditor_LostFocus"
                      Text="{x:Bind noteModel.Text, Mode=TwoWay}"/>
 
-            <Grid Grid.Row="1" Grid.Column="0">
+            <Grid Grid.Row="2" Grid.Column="0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MinWidth="0"/>
                     <ColumnDefinition Width="Auto"/>

@@ -51,7 +51,10 @@ namespace WinUINotes.Models
             {
                 if (item.IsOfType(StorageItemTypes.Folder))
                 {
-                    await GetFilesInFolderAsync((StorageFolder)item, noteFiles);
+                    if (!string.Equals(item.Name, "Trash", StringComparison.OrdinalIgnoreCase))
+                    {
+                        await GetFilesInFolderAsync((StorageFolder)item, noteFiles);
+                    }
                 }
                 else if (item.IsOfType(StorageItemTypes.File))
                 {
@@ -80,6 +83,7 @@ namespace WinUINotes.Models
                 {
                     Filename = file.Name,
                     Date = file.DateCreated.DateTime,
+                    LastEdited = properties.DateModified.DateTime,
                     IsSaved = true
                 };
 
@@ -88,6 +92,7 @@ namespace WinUINotes.Models
                     cachedEntry.ModifiedUtcTicks == properties.DateModified.UtcDateTime.Ticks)
                 {
                     note.Date = DateTime.FromBinary(cachedEntry.DateBinary);
+                    note.Title = cachedEntry.Title ?? string.Empty;
                     note.SetCachedPreview(cachedEntry.Preview);
                 }
                 else
