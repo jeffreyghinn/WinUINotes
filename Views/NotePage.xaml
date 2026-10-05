@@ -8,39 +8,52 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Padding="16" RowSpacing="8">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="400"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <Grid Padding="16">
+        <!-- Keep note content readable on wide windows while letting it use the
+             full available width on smaller windows. -->
+        <Grid x:Name="NoteLayout"
+              MaxWidth="960"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              RowSpacing="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="0"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="0"/>
+            </Grid.ColumnDefinitions>
 
-        <TextBox x:Name="NoteEditor"
-         AcceptsReturn="True"
-         TextWrapping="Wrap"
-         PlaceholderText="Enter your note"
-         Header="{x:Bind noteModel.Date.ToString()}"
-         ScrollViewer.VerticalScrollBarVisibility="Auto"
-         Width="400"
-         Grid.Column="1"
-         Loaded="NoteEditor_Loaded"
-         TextChanged="NoteEditor_TextChanged"
-         LostFocus="NoteEditor_LostFocus"
-         Text="{x:Bind noteModel.Text, Mode=TwoWay}"/>
+            <TextBox x:Name="NoteEditor"
+                     Grid.Row="0"
+                     Grid.Column="0"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch"
+                     MinWidth="0"
+                     MinHeight="0"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     PlaceholderText="Enter your note"
+                     Header="{x:Bind noteModel.Date.ToString()}"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     Loaded="NoteEditor_Loaded"
+                     TextChanged="NoteEditor_TextChanged"
+                     LostFocus="NoteEditor_LostFocus"
+                     Text="{x:Bind noteModel.Text, Mode=TwoWay}"/>
 
-        <StackPanel Orientation="Horizontal"
-            HorizontalAlignment="Right"
-            Spacing="4"
-            Grid.Row="1" Grid.Column="1">
-            <TextBlock x:Name="SaveStatusText"
-                       VerticalAlignment="Center"
-                       Margin="0,0,8,0"
-                       Style="{StaticResource CaptionTextBlockStyle}"/>
-            <Button Content="Delete" Click="DeleteButton_Click"/>
-        </StackPanel>
+            <Grid Grid.Row="1" Grid.Column="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="0"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="SaveStatusText"
+                           Grid.Column="0"
+                           VerticalAlignment="Center"
+                           Margin="0,0,8,0"
+                           TextTrimming="CharacterEllipsis"
+                           Style="{StaticResource CaptionTextBlockStyle}"/>
+                <Button Grid.Column="1" Content="Delete" Click="DeleteButton_Click"/>
+            </Grid>
+        </Grid>
     </Grid>
 </Page>
