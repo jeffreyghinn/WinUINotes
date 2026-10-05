@@ -27,14 +27,19 @@
          ScrollViewer.VerticalScrollBarVisibility="Auto"
          Width="400"
          Grid.Column="1"
+         Loaded="NoteEditor_Loaded"
+         TextChanged="NoteEditor_TextChanged"
+         LostFocus="NoteEditor_LostFocus"
          Text="{x:Bind noteModel.Text, Mode=TwoWay}"/>
 
         <StackPanel Orientation="Horizontal"
             HorizontalAlignment="Right"
             Spacing="4"
             Grid.Row="1" Grid.Column="1">
-            <Button Content="Save &amp; close" Click="SaveAndCloseButton_Click" Style="{StaticResource AccentButtonStyle}"/>
-            <Button Content="Save" Click="SaveButton_Click"/>
+            <TextBlock x:Name="SaveStatusText"
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"
+                       Style="{StaticResource CaptionTextBlockStyle}"/>
             <Button Content="Delete" Click="DeleteButton_Click"/>
         </StackPanel>
     </Grid>

@@ -6,13 +6,8 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Storage;
+using System.Threading;
+using System.Threading.Tasks;
 using WinUINotes.Models;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -25,7 +20,14 @@ namespace WinUINotes.Views
     /// </summary>
     public sealed partial class NotePage : Page
     {
+        private static readonly TimeSpan SaveDelay = TimeSpan.FromMilliseconds(800);
         private Note? noteModel;
+        private CancellationTokenSource? saveCancellation;
+        private Task? autoSaveTask;
+        private long editVersion;
+        private bool isLoading = true;
+        private bool isDeleting;
+        private bool noteContentReady;
 
         public NotePage()
         {
@@ -35,6 +37,7 @@ namespace WinUINotes.Views
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
+            isLoading = true;
 
             if (e.Parameter is Note note)
             {
@@ -54,41 +57,129 @@ namespace WinUINotes.Views
                 }
                 catch (Exception)
                 {
-                    ContentDialog errorDialog = new()
-                    {
-                        Title = "Couldn't open note",
-                        Content = "WinUINotes couldn't read this note. You can go back and try again.",
-                        CloseButtonText = "OK",
-                        XamlRoot = XamlRoot
-                    };
-
-                    await errorDialog.ShowAsync();
+                    SaveStatusText.Text = "Couldn't open note. Go back and try again.";
+                    return;
                 }
-                finally
+            }
+
+            NoteEditor.Text = noteModel.Text;
+            NoteEditor.IsEnabled = true;
+            SaveStatusText.Text = "Changes save automatically";
+            isLoading = false;
+            noteContentReady = true;
+            QueueEditorFocus();
+        }
+
+        private void NoteEditor_Loaded(object sender, RoutedEventArgs e)
+        {
+            QueueEditorFocus();
+        }
+
+        private void QueueEditorFocus()
+        {
+            if (!noteContentReady)
+            {
+                return;
+            }
+
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                if (noteContentReady && NoteEditor.IsLoaded && NoteEditor.IsEnabled)
                 {
-                    NoteEditor.IsEnabled = true;
+                    NoteEditor.Focus(FocusState.Programmatic);
+                    NoteEditor.SelectionStart = NoteEditor.Text.Length;
+                }
+            });
+        }
+
+        protected override async void OnNavigatedFrom(NavigationEventArgs e)
+        {
+            base.OnNavigatedFrom(e);
+            saveCancellation?.Cancel();
+            if (!isDeleting && noteModel is { HasChanges: true } note)
+            {
+                if (autoSaveTask is not null)
+                {
+                    await autoSaveTask;
+                }
+
+                if (note.HasChanges)
+                {
+                    await SaveChangesAsync(note, editVersion);
                 }
             }
         }
 
-        private async void SaveButton_Click(object sender, RoutedEventArgs e)
+        private void NoteEditor_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (noteModel is not null)
+            if (isLoading || noteModel is null)
             {
-                await noteModel.SaveAsync();
+                return;
+            }
+
+            noteModel.Text = NoteEditor.Text;
+            noteModel.HasChanges = true;
+            editVersion++;
+            SaveStatusText.Text = "Unsaved changes";
+            ScheduleAutoSave();
+        }
+
+        private async void NoteEditor_LostFocus(object sender, RoutedEventArgs e)
+        {
+            if (!isLoading && noteModel is { HasChanges: true } note)
+            {
+                saveCancellation?.Cancel();
+                if (autoSaveTask is not null)
+                {
+                    await autoSaveTask;
+                }
+
+                if (note.HasChanges)
+                {
+                    autoSaveTask = SaveChangesAsync(note, editVersion);
+                }
             }
         }
 
-        private async void SaveAndCloseButton_Click(object sender, RoutedEventArgs e)
+        private void ScheduleAutoSave()
         {
-            if (noteModel is not null)
-            {
-                await noteModel.SaveAsync();
-            }
+            saveCancellation?.Cancel();
+            saveCancellation?.Dispose();
+            saveCancellation = new CancellationTokenSource();
+            autoSaveTask = SaveAfterPauseAsync(noteModel!, editVersion, saveCancellation.Token);
+        }
 
-            if (Frame.CanGoBack == true)
+        private async Task SaveAfterPauseAsync(Note note, long version, CancellationToken cancellationToken)
+        {
+            try
             {
-                Frame.GoBack();
+                await Task.Delay(SaveDelay, cancellationToken);
+                await SaveChangesAsync(note, version);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        private async Task SaveChangesAsync(Note note, long version)
+        {
+            SaveStatusText.Text = "Saving…";
+            try
+            {
+                await note.SaveAsync();
+                if (version == editVersion)
+                {
+                    note.HasChanges = false;
+                    SaveStatusText.Text = "All changes saved";
+                }
+                else
+                {
+                    SaveStatusText.Text = "Unsaved changes";
+                }
+            }
+            catch (Exception)
+            {
+                SaveStatusText.Text = "Couldn't save. Changes will remain here; edit again to retry.";
             }
         }
 
@@ -111,6 +202,13 @@ namespace WinUINotes.Views
             if (await confirmationDialog.ShowAsync() != ContentDialogResult.Primary)
             {
                 return;
+            }
+
+            isDeleting = true;
+            saveCancellation?.Cancel();
+            if (autoSaveTask is not null)
+            {
+                await autoSaveTask;
             }
 
             await noteModel.DeleteAsync();

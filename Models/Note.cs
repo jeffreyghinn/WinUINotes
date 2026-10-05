@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Storage;
 
@@ -14,6 +15,7 @@ namespace WinUINotes.Models
         private string text = string.Empty;
         private string preview = string.Empty;
         private DateTime date = DateTime.Now;
+        private readonly SemaphoreSlim fileOperationLock = new(1, 1);
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -49,6 +51,8 @@ namespace WinUINotes.Models
 
         public bool IsSaved { get; internal set; }
         public bool IsContentLoaded { get; private set; } = true;
+        public bool HasChanges { get; internal set; }
+        public bool IsDeleted { get; private set; }
 
         public Note()
         {
@@ -57,16 +61,25 @@ namespace WinUINotes.Models
 
         public async Task SaveAsync()
         {
-            StorageFile noteFile = (StorageFile)await storageFolder.TryGetItemAsync(Filename);
-            if (noteFile is null)
+            await fileOperationLock.WaitAsync();
+            try
             {
-                noteFile = await storageFolder.CreateFileAsync(Filename, CreationCollisionOption.ReplaceExisting);
-            }
+                StorageFile noteFile = (StorageFile)await storageFolder.TryGetItemAsync(Filename);
+                if (noteFile is null)
+                {
+                    noteFile = await storageFolder.CreateFileAsync(Filename, CreationCollisionOption.ReplaceExisting);
+                }
 
-            await FileIO.WriteTextAsync(noteFile, Text);
-            IsSaved = true;
-            IsContentLoaded = true;
-            await NoteMetadataCache.UpdateAsync(this);
+                string textToSave = Text;
+                await FileIO.WriteTextAsync(noteFile, textToSave);
+                IsSaved = true;
+                IsContentLoaded = true;
+                await NoteMetadataCache.UpdateAsync(this);
+            }
+            finally
+            {
+                fileOperationLock.Release();
+            }
         }
 
         public async Task LoadPreviewAsync(StorageFile noteFile)
@@ -98,11 +111,21 @@ namespace WinUINotes.Models
 
         public async Task DeleteAsync()
         {
-            StorageFile noteFile = (StorageFile)await storageFolder.TryGetItemAsync(Filename);
-            if (noteFile is not null)
+            await fileOperationLock.WaitAsync();
+            try
             {
-                await noteFile.DeleteAsync();
+                StorageFile noteFile = (StorageFile)await storageFolder.TryGetItemAsync(Filename);
+                if (noteFile is not null)
+                {
+                    await noteFile.DeleteAsync();
+                }
+
                 await NoteMetadataCache.RemoveAsync(Filename);
+                IsDeleted = true;
+            }
+            finally
+            {
+                fileOperationLock.Release();
             }
         }
 

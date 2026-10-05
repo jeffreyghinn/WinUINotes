@@ -37,9 +37,11 @@ public sealed partial class AllNotesPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        foreach (Note draft in notesModel.Notes.Where(note => !note.IsSaved).ToList())
+        foreach (Note note in notesModel.Notes
+                     .Where(note => note.IsDeleted || (!note.IsSaved && !note.HasChanges))
+                     .ToList())
         {
-            notesModel.Notes.Remove(draft);
+            notesModel.Notes.Remove(note);
         }
 
         if (!hasLoadedNotes)
