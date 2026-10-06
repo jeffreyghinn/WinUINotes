@@ -25,18 +25,21 @@
               Title="WinUI Notes"
               IsBackButtonVisible="True"
               IsBackButtonEnabled="{x:Bind rootFrame.CanGoBack, Mode=OneWay}"
-              BackRequested="AppTitleBar_BackRequested">
+              IsPaneToggleButtonVisible="False"
+              BackRequested="AppTitleBar_BackRequested"
+              PaneToggleRequested="AppTitleBar_PaneToggleRequested">
         </TitleBar>
 
         <NavigationView x:Name="AppNavigationView"
                         Grid.Row="1"
-                        PaneDisplayMode="LeftCompact"
+                        PaneDisplayMode="Left"
                         IsBackButtonVisible="Collapsed"
+                        IsPaneToggleButtonVisible="False"
                         IsSettingsVisible="False"
-                        IsPaneOpen="True"
                         OpenPaneLength="240"
                         CompactPaneLength="48"
                         Loaded="AppNavigationView_Loaded"
+                        SizeChanged="AppNavigationView_SizeChanged"
                         ItemInvoked="AppNavigationView_ItemInvoked">
             <NavigationView.MenuItems>
                 <NavigationViewItem Content="Notes" Tag="Notes" IsSelected="True">

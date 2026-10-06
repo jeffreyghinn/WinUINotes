@@ -36,6 +36,7 @@ namespace WinUINotes
     public sealed partial class MainWindow : Window
     {
         private const string WindowStateKey = "MainWindowState";
+        private const double ExpandedSidebarWidthThreshold = 1000;
         private const uint WmKeyDown = 0x0100;
         private const uint WmSysKeyDown = 0x0104;
         private const uint WmAppCommand = 0x0319;
@@ -50,6 +51,7 @@ namespace WinUINotes
         private bool _hasNormalBounds;
         private bool _restoringWindowState;
         private bool _storeLicenseLoaded;
+        private bool? _isLargeWindow;
 
         public MainWindow()
         {
@@ -245,6 +247,8 @@ namespace WinUINotes
 
         private async void AppNavigationView_Loaded(object sender, RoutedEventArgs e)
         {
+            UpdateSidebarForWindowWidth(AppNavigationView.ActualWidth);
+
             if (_storeLicenseLoaded)
             {
                 return;
@@ -256,6 +260,32 @@ namespace WinUINotes
 #if DEBUG
             UpdateDebugProToggle();
 #endif
+        }
+
+        private void AppNavigationView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateSidebarForWindowWidth(e.NewSize.Width);
+        }
+
+        private void UpdateSidebarForWindowWidth(double width)
+        {
+            var isLargeWindow = width >= ExpandedSidebarWidthThreshold;
+            if (_isLargeWindow == isLargeWindow)
+            {
+                return;
+            }
+
+            _isLargeWindow = isLargeWindow;
+            AppNavigationView.PaneDisplayMode = isLargeWindow
+                ? NavigationViewPaneDisplayMode.Left
+                : NavigationViewPaneDisplayMode.LeftMinimal;
+            AppNavigationView.IsPaneOpen = isLargeWindow;
+            AppTitleBar.IsPaneToggleButtonVisible = !isLargeWindow;
+        }
+
+        private void AppTitleBar_PaneToggleRequested(TitleBar sender, object args)
+        {
+            AppNavigationView.IsPaneOpen = !AppNavigationView.IsPaneOpen;
         }
 
         private async void AppNavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
