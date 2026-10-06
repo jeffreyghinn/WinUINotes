@@ -48,7 +48,7 @@ public sealed partial class AllNotesPage : Page
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
-        if (!hasCleanedExpiredTrash)
+        if (FeatureFlags.ProFeaturesEnabled && !hasCleanedExpiredTrash)
         {
             try
             {

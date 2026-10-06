@@ -249,6 +249,10 @@ namespace WinUINotes
         {
             UpdateSidebarForWindowWidth(AppNavigationView.ActualWidth);
 
+#if DEBUG
+            DebugProToggle.Visibility = FeatureFlags.ProFeaturesEnabled ? Visibility.Visible : Visibility.Collapsed;
+#endif
+
             if (_storeLicenseLoaded)
             {
                 return;
@@ -304,13 +308,18 @@ namespace WinUINotes
                     }
                     break;
                 case "Trash":
-                    if (await ProLicense.HasProAsync() && rootFrame.Content is not TrashPage)
+                    if (FeatureFlags.ProFeaturesEnabled &&
+                        await ProLicense.HasProAsync() &&
+                        rootFrame.Content is not TrashPage)
                     {
                         rootFrame.Navigate(typeof(TrashPage));
                     }
                     break;
                 case "UnlockPro":
-                    await PurchaseProAsync();
+                    if (FeatureFlags.ProFeaturesEnabled)
+                    {
+                        await PurchaseProAsync();
+                    }
                     break;
             }
         }
@@ -350,8 +359,12 @@ namespace WinUINotes
 
         private void UpdateProControls(bool isPro)
         {
-            UnlockProItem.Visibility = isPro ? Visibility.Collapsed : Visibility.Visible;
-            TrashItem.Visibility = isPro ? Visibility.Visible : Visibility.Collapsed;
+            UnlockProItem.Visibility = FeatureFlags.ProFeaturesEnabled && !isPro
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+            TrashItem.Visibility = FeatureFlags.ProFeaturesEnabled && isPro
+                ? Visibility.Visible
+                : Visibility.Collapsed;
             if (rootFrame.Content is AllNotesPage notesPage)
             {
                 notesPage.ApplyProLicense(isPro);
@@ -365,6 +378,12 @@ namespace WinUINotes
 #if DEBUG
         private void UpdateDebugProToggle()
         {
+            if (!FeatureFlags.ProFeaturesEnabled)
+            {
+                DebugProToggle.Visibility = Visibility.Collapsed;
+                return;
+            }
+
             DebugProToggle.IsOn = ProLicense.DebugProOverride == true;
             DebugProToggle.Visibility = Visibility.Visible;
         }

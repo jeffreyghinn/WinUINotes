@@ -29,6 +29,11 @@ internal static class ProLicense
 
     public static async Task<bool> HasProAsync()
     {
+        if (!FeatureFlags.ProFeaturesEnabled)
+        {
+            return false;
+        }
+
 #if DEBUG
         if (debugProOverride.HasValue)
         {
@@ -58,6 +63,11 @@ internal static class ProLicense
 
     public static async Task<StorePurchaseResult> PurchaseAsync()
     {
+        if (!FeatureFlags.ProFeaturesEnabled)
+        {
+            throw new InvalidOperationException("Pro features are not enabled in this version.");
+        }
+
         StoreProductQueryResult products = await GetContext().GetAssociatedStoreProductsAsync(new[] { "Durable" });
         if (products.ExtendedError is not null)
         {
