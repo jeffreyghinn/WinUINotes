@@ -36,7 +36,11 @@ namespace WinUINotes
     public sealed partial class MainWindow : Window
     {
         private const string WindowStateKey = "MainWindowState";
-        private const double ExpandedSidebarWidthThreshold = 1000;
+        private const double ExpandedSidebarWidthThreshold =
+            240 + (24 * 2) + (200 * 3) + (12 * 2);
+        private const int MinimumWindowWidth = 320;
+        private const int MinimumWindowHeight = 320;
+        private const uint WmGetMinMaxInfo = 0x0024;
         private const uint WmKeyDown = 0x0100;
         private const uint WmSysKeyDown = 0x0104;
         private const uint WmAppCommand = 0x0319;
@@ -59,6 +63,12 @@ namespace WinUINotes
             _enumChildWindowsProc = SubclassChildWindow;
             InitializeComponent();
             ProLicense.Initialize(WindowNative.GetWindowHandle(this));
+#if DEBUG
+            var settings = ApplicationData.Current.LocalSettings;
+            var simulatePro = settings.Values.TryGetValue("SimulateProEnabled", out var savedValue) &&
+                              savedValue is bool enabled && enabled;
+            ProLicense.SetDebugProOverride(simulatePro ? true : null);
+#endif
             RootGrid.AddHandler(
                 UIElement.PointerPressedEvent,
                 new PointerEventHandler(RootGrid_PointerPressed),
@@ -203,8 +213,8 @@ namespace WinUINotes
 
             var display = DisplayArea.GetFromRect(bounds, DisplayAreaFallback.Nearest);
             var workArea = display.WorkArea;
-            var minimumWidth = Math.Min(320, workArea.Width);
-            var minimumHeight = Math.Min(240, workArea.Height);
+            var minimumWidth = Math.Min(MinimumWindowWidth, workArea.Width);
+            var minimumHeight = Math.Min(MinimumWindowHeight, workArea.Height);
             var width = Math.Clamp(bounds.Width, minimumWidth, workArea.Width);
             var height = Math.Clamp(bounds.Height, minimumHeight, workArea.Height);
             var x = Math.Clamp(bounds.X, workArea.X, workArea.X + workArea.Width - width);
@@ -249,10 +259,6 @@ namespace WinUINotes
         {
             UpdateSidebarForWindowWidth(AppNavigationView.ActualWidth);
 
-#if DEBUG
-            DebugProToggle.Visibility = FeatureFlags.ProFeaturesEnabled ? Visibility.Visible : Visibility.Collapsed;
-#endif
-
             if (_storeLicenseLoaded)
             {
                 return;
@@ -261,9 +267,6 @@ namespace WinUINotes
             _storeLicenseLoaded = true;
             bool isPro = await ProLicense.HasProAsync();
             UpdateProControls(isPro);
-#if DEBUG
-            UpdateDebugProToggle();
-#endif
         }
 
         private void AppNavigationView_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -315,26 +318,30 @@ namespace WinUINotes
                         rootFrame.Navigate(typeof(TrashPage));
                     }
                     break;
-                case "UnlockPro":
-                    if (FeatureFlags.ProFeaturesEnabled)
+                case "About":
+                    if (rootFrame.Content is not AboutPage)
                     {
-                        await PurchaseProAsync();
+                        rootFrame.Navigate(typeof(AboutPage));
+                    }
+                    if (rootFrame.Content is AboutPage aboutPage)
+                    {
+                        aboutPage.PurchaseRequested -= AboutPage_PurchaseRequested;
+                        aboutPage.PurchaseRequested += AboutPage_PurchaseRequested;
+                        aboutPage.SimulatedLicenseChanged -= AboutPage_SimulatedLicenseChanged;
+                        aboutPage.SimulatedLicenseChanged += AboutPage_SimulatedLicenseChanged;
+                        aboutPage.SetProOfferVisible(UnlockProItemVisibility());
                     }
                     break;
             }
         }
 
-        private async void DebugProToggle_Toggled(object sender, RoutedEventArgs e)
+        private async void AboutPage_SimulatedLicenseChanged(object? sender, EventArgs e)
         {
-#if DEBUG
-            ProLicense.SetDebugProOverride(DebugProToggle.IsOn ? true : null);
             UpdateProControls(await ProLicense.HasProAsync());
-#endif
         }
 
         private async Task PurchaseProAsync()
         {
-            UnlockProItem.IsEnabled = false;
             try
             {
                 StorePurchaseResult result = await ProLicense.PurchaseAsync();
@@ -351,20 +358,30 @@ namespace WinUINotes
             {
                 await ShowStoreMessageAsync($"The Store couldn't start this purchase. {exception.Message}");
             }
-            finally
+        }
+
+        private bool UnlockProItemVisibility() =>
+            FeatureFlags.ProFeaturesEnabled && TrashItem.Visibility != Visibility.Visible;
+
+        private async void AboutPage_PurchaseRequested(object? sender, EventArgs e)
+        {
+            if (sender is AboutPage page)
             {
-                UnlockProItem.IsEnabled = true;
+                page.SetPurchaseInProgress(true);
+                await PurchaseProAsync();
+                page.SetPurchaseInProgress(false);
             }
         }
 
         private void UpdateProControls(bool isPro)
         {
-            UnlockProItem.Visibility = FeatureFlags.ProFeaturesEnabled && !isPro
-                ? Visibility.Visible
-                : Visibility.Collapsed;
             TrashItem.Visibility = FeatureFlags.ProFeaturesEnabled && isPro
                 ? Visibility.Visible
                 : Visibility.Collapsed;
+            if (rootFrame.Content is AboutPage aboutPage)
+            {
+                aboutPage.SetProOfferVisible(FeatureFlags.ProFeaturesEnabled && !isPro);
+            }
             if (rootFrame.Content is AllNotesPage notesPage)
             {
                 notesPage.ApplyProLicense(isPro);
@@ -374,20 +391,6 @@ namespace WinUINotes
                 notePage.ApplyProLicense(isPro);
             }
         }
-
-#if DEBUG
-        private void UpdateDebugProToggle()
-        {
-            if (!FeatureFlags.ProFeaturesEnabled)
-            {
-                DebugProToggle.Visibility = Visibility.Collapsed;
-                return;
-            }
-
-            DebugProToggle.IsOn = ProLicense.DebugProOverride == true;
-            DebugProToggle.Visibility = Visibility.Visible;
-        }
-#endif
 
         private async Task ShowStoreMessageAsync(string message)
         {
@@ -409,6 +412,16 @@ namespace WinUINotes
             UIntPtr subclassId,
             UIntPtr referenceData)
         {
+            if (message == WmGetMinMaxInfo && hwnd == WindowNative.GetWindowHandle(this))
+            {
+                var minMaxInfo = Marshal.PtrToStructure<MinMaxInfo>(lParam);
+                var dpi = GetDpiForWindow(hwnd);
+                var scale = dpi == 0 ? 1.0 : dpi / 96.0;
+                minMaxInfo.MinimumTrackSize.X = (int)Math.Ceiling(MinimumWindowWidth * scale);
+                minMaxInfo.MinimumTrackSize.Y = (int)Math.Ceiling(MinimumWindowHeight * scale);
+                Marshal.StructureToPtr(minMaxInfo, lParam, false);
+            }
+
             var appCommand = (unchecked((ulong)lParam.ToInt64()) >> 16) & 0xFFFF;
             var isBrowserBack = message == WmAppCommand && appCommand == AppCommandBrowserBack;
             var isBrowserBackKey = (message == WmKeyDown || message == WmSysKeyDown) &&
@@ -464,6 +477,26 @@ namespace WinUINotes
             UIntPtr referenceData);
 
         private delegate bool EnumChildWindowsProc(IntPtr hwnd, IntPtr referenceData);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NativePoint
+        {
+            public int X;
+            public int Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MinMaxInfo
+        {
+            public NativePoint Reserved;
+            public NativePoint MaximumSize;
+            public NativePoint MaximumPosition;
+            public NativePoint MinimumTrackSize;
+            public NativePoint MaximumTrackSize;
+        }
+
+        [DllImport("user32.dll", ExactSpelling = true)]
+        private static extern uint GetDpiForWindow(IntPtr hwnd);
 
         [DllImport("comctl32.dll", ExactSpelling = true)]
         [return: MarshalAs(UnmanagedType.Bool)]

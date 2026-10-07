@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="WinUINotes.Views.AboutPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer>
+        <StackPanel MaxWidth="560" Spacing="16" Padding="32">
+            <TextBlock Text="About" Style="{ThemeResource TitleTextBlockStyle}"/>
+            <TextBlock Text="WinUI Notes" Style="{ThemeResource SubtitleTextBlockStyle}"/>
+            <TextBlock Text="A simple place to capture and organize your notes."
+                       Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+            <TextBlock x:Name="VersionText" Style="{ThemeResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+            <ToggleSwitch x:Name="DebugProToggle" Header="Simulate Pro"
+                          OnContent="On" OffContent="Off"
+                          Toggled="DebugProToggle_Toggled" Visibility="Collapsed"/>
+            <Button x:Name="UnlockProButton" Content="Unlock WinUI Notes Pro"
+                    Click="UnlockProButton_Click" Visibility="Collapsed"/>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -47,29 +47,19 @@
                         <SymbolIcon Symbol="Home"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
                 <NavigationViewItem x:Name="TrashItem" Content="Trash" Tag="Trash" Visibility="Collapsed">
                     <NavigationViewItem.Icon>
                         <SymbolIcon Symbol="Delete"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-            </NavigationView.MenuItems>
-            <NavigationView.FooterMenuItems>
-                <NavigationViewItem x:Name="UnlockProItem" Content="Unlock WinUI Notes Pro"
-                                    Tag="UnlockPro" Visibility="Collapsed">
+                <NavigationViewItem Content="About" Tag="About">
                     <NavigationViewItem.Icon>
-                        <SymbolIcon Symbol="Shop"/>
+                        <FontIcon Glyph="&#xE946;"/>
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.FooterMenuItems>
-            <NavigationView.PaneFooter>
-                <ToggleSwitch x:Name="DebugProToggle"
-                              Header="Simulate Pro"
-                              OnContent="On"
-                              OffContent="Off"
-                              Toggled="DebugProToggle_Toggled"
-                              Visibility="Collapsed"
-                              Margin="12,8,12,12"/>
-            </NavigationView.PaneFooter>
             <Frame x:Name="rootFrame" SourcePageType="views:AllNotesPage"/>
         </NavigationView>
     </Grid>

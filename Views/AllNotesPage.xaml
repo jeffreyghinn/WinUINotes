@@ -49,39 +49,55 @@
         </Grid.RowDefinitions>
 
         <CommandBar DefaultLabelPosition="Right">
-            <AppBarButton Icon="Add" Label="New note" Click="NewNoteButton_Click"/>
-            <CommandBar.Content>
-                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                    <TextBlock Text="Quick notes" Margin="16,8"
-                               VerticalAlignment="Center"
-                               Style="{ThemeResource SubtitleTextBlockStyle}"/>
-                    <StackPanel x:Name="SortControls" Orientation="Horizontal" Spacing="8"
-                                VerticalAlignment="Center" Visibility="Collapsed">
-                        <ComboBox x:Name="SortByComboBox" Width="160" Height="32"
-                                  PlaceholderText="Sort by"
-                                  SelectionChanged="SortByComboBox_SelectionChanged">
-                            <ComboBoxItem Content="Title"/>
-                            <ComboBoxItem Content="Date created"/>
-                            <ComboBoxItem Content="Date last edited"/>
-                        </ComboBox>
-                        <Button x:Name="SortDirectionToggle"
-                                Width="40"
-                                Height="32"
-                                MinHeight="32"
-                                MaxHeight="32"
-                                Padding="0"
-                                VerticalAlignment="Center"
-                                Click="SortDirectionToggle_Click">
-                            <TextBlock x:Name="SortDirectionIcon"
-                                       Text="↓"
-                                       FontFamily="Segoe UI Symbol"
-                                       FontSize="18"
-                                       FontWeight="SemiBold"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"/>
+            <CommandBar.PrimaryCommands>
+                <AppBarElementContainer>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Height="48"
+                                VerticalAlignment="Center">
+                        <StackPanel x:Name="SortControls" Orientation="Horizontal" Spacing="8"
+                                    VerticalAlignment="Center" Visibility="Collapsed">
+                            <ComboBox x:Name="SortByComboBox" Width="160" Height="32"
+                                      VerticalAlignment="Center"
+                                      PlaceholderText="Sort by"
+                                      SelectionChanged="SortByComboBox_SelectionChanged">
+                                <ComboBoxItem Content="Title"/>
+                                <ComboBoxItem Content="Date created"/>
+                                <ComboBoxItem Content="Date last edited"/>
+                            </ComboBox>
+                            <Button x:Name="SortDirectionToggle"
+                                    Width="40"
+                                    Height="32"
+                                    MinHeight="32"
+                                    MaxHeight="32"
+                                    Padding="0"
+                                    VerticalAlignment="Center"
+                                    Click="SortDirectionToggle_Click">
+                                <TextBlock x:Name="SortDirectionIcon"
+                                           Text="↓"
+                                           FontFamily="Segoe UI Symbol"
+                                           FontSize="18"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </Button>
+                        </StackPanel>
+                        <Button Click="NewNoteButton_Click" Height="32"
+                                MinHeight="32" MaxHeight="32" Padding="8,0"
+                                VerticalAlignment="Center">
+                            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE710;"
+                                          FontFamily="Segoe MDL2 Assets"
+                                          FontSize="14"
+                                          VerticalAlignment="Center"/>
+                                <TextBlock Text="New note" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </Button>
                     </StackPanel>
-                </StackPanel>
+                </AppBarElementContainer>
+            </CommandBar.PrimaryCommands>
+            <CommandBar.Content>
+                <TextBlock Text="Notes" Margin="16,8"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource SubtitleTextBlockStyle}"/>
             </CommandBar.Content>
         </CommandBar>
 
