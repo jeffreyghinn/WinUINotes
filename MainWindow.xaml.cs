@@ -92,7 +92,6 @@ namespace WinUINotes
             EnumChildWindows(hwnd, _enumChildWindowsProc, UIntPtr.Zero);
             var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             _appWindow = AppWindow.GetFromWindowId(windowId);
-            _appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "WinUINotes.ico"));
             _appWindow.Changed += AppWindow_Changed;
             Closed += MainWindow_Closed;
 
@@ -241,6 +240,14 @@ namespace WinUINotes
             var iconPath = AppTitleBar.ActualTheme == ElementTheme.Dark
                 ? "ms-appx:///Assets/TitleBarIcon.Dark.png"
                 : "ms-appx:///Assets/TitleBarIcon.png";
+
+            if (_appWindow is not null)
+            {
+                var windowIconFileName = AppTitleBar.ActualTheme == ElementTheme.Dark
+                    ? "WinUINotes.Dark.ico"
+                    : "WinUINotes.Light.ico";
+                _appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", windowIconFileName));
+            }
 
             AppTitleBar.IconSource = new ImageIconSource
             {

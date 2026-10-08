@@ -25,7 +25,8 @@
     <Content Include="Assets\Square44x44Logo.scale-200.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
 	<Content Include="Assets\TitleBarIcon.png" />
-	<Content Include="Assets\WinUINotes.ico" CopyToOutputDirectory="PreserveNewest" />
+	<Content Include="Assets\WinUINotes.Light.ico" CopyToOutputDirectory="PreserveNewest" />
+	<Content Include="Assets\WinUINotes.Dark.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
