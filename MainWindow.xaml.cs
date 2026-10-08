@@ -92,6 +92,7 @@ namespace WinUINotes
             EnumChildWindows(hwnd, _enumChildWindowsProc, UIntPtr.Zero);
             var windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
             _appWindow = AppWindow.GetFromWindowId(windowId);
+            _appWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "WinUINotes.ico"));
             _appWindow.Changed += AppWindow_Changed;
             Closed += MainWindow_Closed;
 
