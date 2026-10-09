@@ -313,8 +313,7 @@ namespace WinUINotes
                     }
                     break;
                 case "Trash":
-                    if (FeatureFlags.ProFeaturesEnabled &&
-                        await ProLicense.HasProAsync() &&
+                    if (await ProLicense.HasProAsync() &&
                         rootFrame.Content is not TrashPage)
                     {
                         rootFrame.Navigate(typeof(TrashPage));
@@ -356,7 +355,7 @@ namespace WinUINotes
         }
 
         private bool UnlockProItemVisibility() =>
-            FeatureFlags.ProFeaturesEnabled && TrashItem.Visibility != Visibility.Visible;
+            TrashItem.Visibility != Visibility.Visible;
 
         private async void AboutPage_PurchaseRequested(object? sender, EventArgs e)
         {
@@ -370,12 +369,12 @@ namespace WinUINotes
 
         private void UpdateProControls(bool isPro)
         {
-            TrashItem.Visibility = FeatureFlags.ProFeaturesEnabled && isPro
+            TrashItem.Visibility = isPro
                 ? Visibility.Visible
                 : Visibility.Collapsed;
             if (rootFrame.Content is AboutPage aboutPage)
             {
-                aboutPage.SetProOfferVisible(FeatureFlags.ProFeaturesEnabled && !isPro);
+                aboutPage.SetProOfferVisible(!isPro);
             }
             if (rootFrame.Content is AllNotesPage notesPage)
             {
