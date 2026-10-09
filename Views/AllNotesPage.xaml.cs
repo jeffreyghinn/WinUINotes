@@ -68,7 +68,7 @@ public sealed partial class AllNotesPage : Page
             notesModel.Notes.Remove(note);
         }
 
-        if (!hasLoadedNotes)
+        if (e.Parameter is true || !hasLoadedNotes)
         {
             try
             {

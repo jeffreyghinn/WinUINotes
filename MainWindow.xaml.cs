@@ -63,12 +63,6 @@ namespace WinUINotes
             _enumChildWindowsProc = SubclassChildWindow;
             InitializeComponent();
             ProLicense.Initialize(WindowNative.GetWindowHandle(this));
-#if DEBUG
-            var settings = ApplicationData.Current.LocalSettings;
-            var simulatePro = settings.Values.TryGetValue("SimulateProEnabled", out var savedValue) &&
-                              savedValue is bool enabled && enabled;
-            ProLicense.SetDebugProOverride(simulatePro ? true : null);
-#endif
             RootGrid.AddHandler(
                 UIElement.PointerPressedEvent,
                 new PointerEventHandler(RootGrid_PointerPressed),
@@ -335,17 +329,10 @@ namespace WinUINotes
                     {
                         aboutPage.PurchaseRequested -= AboutPage_PurchaseRequested;
                         aboutPage.PurchaseRequested += AboutPage_PurchaseRequested;
-                        aboutPage.SimulatedLicenseChanged -= AboutPage_SimulatedLicenseChanged;
-                        aboutPage.SimulatedLicenseChanged += AboutPage_SimulatedLicenseChanged;
                         aboutPage.SetProOfferVisible(UnlockProItemVisibility());
                     }
                     break;
             }
-        }
-
-        private async void AboutPage_SimulatedLicenseChanged(object? sender, EventArgs e)
-        {
-            UpdateProControls(await ProLicense.HasProAsync());
         }
 
         private async Task PurchaseProAsync()

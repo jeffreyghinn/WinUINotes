@@ -10,9 +10,6 @@ internal static class ProLicense
 {
     public const string ProductId = "WinUINotes.Pro";
     private static StoreContext? context;
-#if DEBUG
-    private static bool? debugProOverride;
-#endif
 
     public static void Initialize(nint windowHandle)
     {
@@ -34,12 +31,6 @@ internal static class ProLicense
             return false;
         }
 
-#if DEBUG
-        if (debugProOverride.HasValue)
-        {
-            return debugProOverride.Value;
-        }
-#endif
         try
         {
             StoreAppLicense license = await GetContext().GetAppLicenseAsync();
@@ -51,15 +42,6 @@ internal static class ProLicense
             return false;
         }
     }
-
-#if DEBUG
-    public static bool? DebugProOverride => debugProOverride;
-
-    public static void SetDebugProOverride(bool? value)
-    {
-        debugProOverride = value;
-    }
-#endif
 
     public static async Task<StorePurchaseResult> PurchaseAsync()
     {

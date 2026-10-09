@@ -40,7 +40,7 @@ public sealed partial class TrashPage : Page
         if (sender is Button { CommandParameter: string filename })
         {
             await TrashService.RestoreAsync(filename);
-            await RefreshAsync();
+            Frame.Navigate(typeof(AllNotesPage), true);
         }
     }
 
