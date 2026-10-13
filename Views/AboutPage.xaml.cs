@@ -19,6 +19,7 @@ namespace WinUINotes.Views
         public void SetProOfferVisible(bool visible)
         {
             UnlockProButton.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            ProOfferMessage.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public void SetPurchaseInProgress(bool inProgress)

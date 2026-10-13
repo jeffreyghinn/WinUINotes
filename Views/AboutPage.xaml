@@ -14,6 +14,10 @@
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
             <Button x:Name="UnlockProButton" Content="Unlock WinUI Notes Pro"
                     Click="UnlockProButton_Click" Visibility="Collapsed"/>
+            <TextBlock x:Name="ProOfferMessage"
+                       Text="The price of the Pro version will increase with every feature added. It is currently the cheapest it will ever be. If you purchase it now, all future Pro features will be included at no extra cost!"
+                       Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="Wrap"
+                       Visibility="Collapsed"/>
         </StackPanel>
     </ScrollViewer>
 </Page>
